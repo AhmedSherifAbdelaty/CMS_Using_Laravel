@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Article;
 use App\Category;
 use App\Http\Requests\PostRequest;
 use App\Post;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Session;
 
 class AdminPostController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      *
@@ -53,6 +55,8 @@ class AdminPostController extends Controller
         $post->title = $request->input('title');
         $post->body = $request->input('body');
         $post->category_id = $request->input('category_id');
+        Auth::user()->role->name === 'Administrator' ? $post->is_active = 1 : $post->is_active = 0 ;
+
         $user = User::find(Auth::user()->id);
         $user->posts()->save($post);
 
@@ -87,6 +91,8 @@ class AdminPostController extends Controller
      */
     public function edit($id)
     {
+        $this->authorize('update', Post::find($id));
+
         $categories = Category::all('name' , 'id');
         $categoriesArr = array();
         foreach ($categories as $category){
@@ -106,10 +112,14 @@ class AdminPostController extends Controller
      */
     public function update(PostRequest $request, $id)
     {
+        $this->authorize('edit', Post::find($id));
+
         $post = Post::findorFail($id);
         $post->title = $request->input('title');
         $post->body = $request->input('body');
         $post->category_id = $request->input('category_id');
+        Auth::user()->role->name === 'Administrator' ? $post->is_active = 1 : $post->is_active = 0 ;
+
         $user = User::find(Auth::user()->id);
         $user->posts()->save($post);
         if($file = $request->file('file')){
@@ -138,6 +148,7 @@ class AdminPostController extends Controller
      */
     public function destroy($id)
     {
+        $this->authorize('edit', Post::find($id));
         $post = Post::find($id);
 
         if($post->photo) {
@@ -147,5 +158,28 @@ class AdminPostController extends Controller
         Session::flash('deleted_post','The post has been deleted');
         return redirect('/admin/posts');
     }
+
+
+
+    public function post($id){
+        $post = Post::findOrFail($id);
+        $comments = $post->comments()->where('is_active' ,1)->get();
+        return view('post' , compact('post' , 'comments'));
+
+    }
+
+
+    public function approvment($id){
+        $post = Post::find($id);
+        if ($post->is_active == 1)
+            $post->is_active = 0;
+        else
+            $post->is_active = 1 ;
+
+        $post->save();
+
+        return redirect('/admin/posts');
+    }
+
     }
 

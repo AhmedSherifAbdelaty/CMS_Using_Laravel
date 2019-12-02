@@ -8,23 +8,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
-class PostCommentController extends Controller
+class AuthorCommentController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
     public function index()
-      {
-          $this->authorize('viewAdmin' , Auth::user());
-        $comments = Comment::paginate(6);
-        return view('admin.comments.index' ,compact('comments'));
-
+    {
+        //
     }
 
     /**
@@ -45,20 +39,7 @@ class PostCommentController extends Controller
      */
     public function store(Request $request)
     {
-
-        $user = Auth::user();
-        $comment = new Comment();
-        $comment->comment = $request->input('comment');
-        $comment->post_id = $request->input('post_id');
-        Auth::user()->role->name === 'Administrator' ? $comment->is_active = 1 : $comment->is_active = 0 ;
-        $user->comments()->save($comment);
-
-        Session::flash('comment_added','comment has been added');
-
-//        $post = Post::find($comment->post_id);
-//        $comments = $post->comments ;
-//
-        return redirect()->back();
+        //
     }
 
     /**
@@ -69,11 +50,7 @@ class PostCommentController extends Controller
      */
     public function show($id)
     {
-
-        $post = Post::findOrFail($id);
-        $comments = $post->comments;
-
-        return view('admin.comments.show' , compact('comments'));
+        //
     }
 
     /**
@@ -84,6 +61,10 @@ class PostCommentController extends Controller
      */
     public function edit($id)
     {
+        $comment = Comment::find($id);
+        $this->authorize('update' , $comment);
+
+        return view('Author.comments.edit' , compact('comment'));
     }
 
     /**
@@ -95,11 +76,19 @@ class PostCommentController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $this->authorize('viewAdmin' , Auth::user());
         $comment = Comment::find($id);
-        $comment->is_active = $request->input('is_active');
+        $this->authorize('update' , $comment);
+        $comment->comment = $request->input('comment');
+        Auth::user()->role->name === 'Administrator' ? $comment->is_active = 1 : $comment->is_active = 0 ;
         $comment->save();
-        return redirect('/admin/comments');
+
+        $post = Post::find($comment->post_id);
+        $comments = $post->comments ;
+        Session::flash('comment_edited','comment has been edtied');
+
+        return redirect("post/$post->id");
+//        return redirect()->route('home.post', ['id' => $post->id]);
+
     }
 
     /**
@@ -110,8 +99,15 @@ class PostCommentController extends Controller
      */
     public function destroy($id)
     {
-        $this->authorize('viewAdmin' , Auth::user());
-        Comment::find($id)->delete();
-        return redirect()->back();
+        $comment = Comment::find($id);
+        $this->authorize('update' , $comment);
+        $comment->delete();
+//
+        $post = Post::find($comment->post_id);
+        $comments = $post->comments ;
+        Session::flash('comment_deleted','comment has been deleted');
+        return redirect()->route('home.post', ['id' => $post->id]);
+
+
     }
 }

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 
 class AdminCategoryController extends Controller
 {
+
+
     /**
      * Display a listing of the resource.
      *

@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminUserController extends Controller
 {
+
+
     /**
      * Display a listing of the resource.
      *
@@ -66,6 +68,9 @@ class AdminUserController extends Controller
         }
         Session::flash('added_user',' user has been added');
         return redirect('/admin/users');
+//        $users = User::all();
+//        return view('admin.users.index' , compact('users'));
+
     }
 
     /**

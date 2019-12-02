@@ -36,8 +36,9 @@
 
     <div class="form-group">
 
+        @can('edit' , $post)
     {!!  Form::submit('Edit Post!' , ['class' => 'btn btn-primary col-sm-4 ']) !!}
-
+        @endcan
 
     {!! Form::close() !!}
     </div>
